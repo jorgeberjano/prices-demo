@@ -1,51 +1,20 @@
 package com.inditex.demo.prices.controller;
 
-
 import com.inditex.demo.prices.dto.PriceDto;
-import com.inditex.demo.prices.service.PriceBatchService;
-import com.inditex.demo.prices.service.PriceService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestParam;
 
-@RestController
-@RequestMapping("/price")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
-public class PriceController {
+@Api(value = "Prices Demo API")
+@Validated
+public interface PriceController {
 
-    @Autowired
-    private PriceService priceService;
-
-    @Autowired
-    private PriceBatchService priceBatchService;
-
-
-    @PostMapping(value = "", consumes = { "multipart/form-data" })
-    public void csvFileUpload(@RequestParam("file") MultipartFile file) {
-        try {
-            priceBatchService.storeFile(file);
-        } catch (Exception ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-        }
-    }
-
-    @GetMapping(value = "", produces = { MediaType.APPLICATION_JSON_VALUE })
-    public PriceDto getPrice(@RequestParam String productId,
-                             @RequestParam String brandId,
-                             @RequestParam String applicationDate) {
-        PriceDto price;
-        try {
-            price = priceService.getPriceForProduct(productId, brandId, applicationDate);
-        } catch (Exception ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-        }
-
-        if (price == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product price not found");
-        }
-        return price;
-    }
+    PriceDto getPrice(
+            @ApiParam(value = "Producto identificator", required = true, example = "35455")
+            @RequestParam String productId,
+            @ApiParam(value = "Brand identificator", required = true, example = "1")
+            @RequestParam String brandId,
+            @ApiParam(value = "Date the price is in effect (YYYY-MM-DD-hh.mm.ss)", required = true, example = "2020-06-14-10.00.00")
+            @RequestParam String date);
 }

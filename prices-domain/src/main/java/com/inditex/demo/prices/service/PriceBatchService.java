@@ -6,4 +6,8 @@ import java.io.IOException;
 
 public interface PriceBatchService {
     void storeFile(MultipartFile file) throws IOException;
+
+    void deleteFile() throws IOException;
+
+    void updatePrices();
 }

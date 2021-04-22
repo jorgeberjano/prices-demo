@@ -1,7 +1,6 @@
 package com.inditex.demo.prices.service;
 
 import com.inditex.demo.prices.csvbean.CsvPriceBean;
-import com.inditex.demo.prices.csvbean.CsvReader;
 import com.inditex.demo.prices.entity.PriceEntity;
 import com.inditex.demo.prices.mapper.PricesMapper;
 import com.inditex.demo.prices.repository.PriceRepository;
@@ -16,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -32,9 +33,6 @@ public class PriceBachServiceImpl implements PriceBatchService {
 
     @Autowired
     private PriceRepository priceRepository;
-
-    @Autowired
-    private CsvReader csvReader;
 
     @PostConstruct
     public void init() {
@@ -85,6 +83,20 @@ public class PriceBachServiceImpl implements PriceBatchService {
 
     @Override
     public void storeFile(MultipartFile multipartFile) throws IOException {
-        multipartFile.transferTo(csvFilePath.toFile());
+        File file = csvFilePath.toFile();
+        if (!file.exists()) {
+            boolean ok = file.createNewFile();
+            if (!ok) {
+                throw new RuntimeException("Failed to create file " + multipartFile.getName());
+            }
+        }
+        FileOutputStream out = new FileOutputStream(file);
+        multipartFile.getInputStream().transferTo(out);
+        out.close();
+    }
+
+    @Override
+    public void deleteFile() throws IOException {
+        Files.delete(csvFilePath);
     }
 }
