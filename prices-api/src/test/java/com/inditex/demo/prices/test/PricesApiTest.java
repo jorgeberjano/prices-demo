@@ -2,6 +2,7 @@ package com.inditex.demo.prices.test;
 
 import com.inditex.demo.prices.dto.PriceDto;
 import com.inditex.demo.prices.service.PriceBatchService;
+import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,5 +74,29 @@ public class PricesApiTest extends BaseTest {
         assertEquals(expectedPriceList, price.getPriceList());
         assertEquals(productId, price.getProductId());
         assertEquals(brandId, price.getBrandId());
+    }
+
+
+    @Test
+    public void testPersistPerformance() throws Exception {
+
+        byte[] cvsFileData = PricesApiTest.class.getResourceAsStream("/massive_prices.csv").readAllBytes();
+        MockMultipartFile file = new MockMultipartFile("file", cvsFileData);
+        mvc.perform(MockMvcRequestBuilders.multipart(PRICES_PATH).file(file)).andExpect(status().isOk());
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+        priceBatchService.updatePrices();
+        watch.stop();
+        System.out.println("Update prices efficiently in " + watch.getTime() + " ms");
+        System.out.println("Used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 + " Kb");
+        System.out.println();
+
+        watch.reset();
+        watch.start();
+        priceBatchService.updatePricesNotEfficient();
+        watch.stop();
+        System.out.println("Update prices inefficiently in " + watch.getTime() + " ms");
+        System.out.println("Used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 + " Kb");
     }
 }

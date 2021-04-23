@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -23,10 +24,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
 public class PriceBachServiceImpl implements PriceBatchService {
+
+    private static final int BATCH_SIZE = 1000;
 
     @Autowired
     private PricesMapper pricesMapper;
@@ -48,7 +53,7 @@ public class PriceBachServiceImpl implements PriceBatchService {
     private final Path csvFilePath = Paths.get("prices.csv");
 
     public void updatePrices() {
-        List<CsvPriceBean> csvPriceBeans;
+        Stream<CsvPriceBean> csvPriceBeans;
         try {
             csvPriceBeans = readPricesFromCsv();
         } catch (IOException e) {
@@ -56,29 +61,39 @@ public class PriceBachServiceImpl implements PriceBatchService {
             return;
         }
 
-        List<PriceEntity> prices = pricesMapper.mapCsvToEntityList(csvPriceBeans);
-
-        persistPrices(prices);
+        // Se persisten las entidades en trozos de esta manera no se carga completamente el archivo CVS en memoria
+        // pero, por otra parte, se realiza la grabación de las entidades por lotes, lo cual es mas eficiente que hacerlo
+        // de uno en uno
+        Flux.fromStream(csvPriceBeans.map(pricesMapper::mapCsvToEntity))
+                .buffer(BATCH_SIZE)
+                .subscribe(priceEntities -> priceRepository.saveAll(priceEntities));
     }
 
-    public List<CsvPriceBean> readPricesFromCsv() throws IOException {
+    @Deprecated
+    public void updatePricesNotEfficient() {
+        Stream<CsvPriceBean> csvPriceBeans;
+        try {
+            csvPriceBeans = readPricesFromCsv();
+        } catch (IOException e) {
+            log.error("Failed to read CSV file", e);
+            return;
+        }
+        List<PriceEntity> priceEntities = csvPriceBeans.map(pricesMapper::mapCsvToEntity).collect(Collectors.toList());
+        priceRepository.saveAll(priceEntities);
+    }
+
+    private Stream<CsvPriceBean> readPricesFromCsv() throws IOException {
 
         MappingStrategy<CsvPriceBean> mappingStrategy = new HeaderColumnNameMappingStrategy<>();
         mappingStrategy.setType(CsvPriceBean.class);
 
         Reader reader = Files.newBufferedReader(csvFilePath);
-        CsvToBean<CsvPriceBean> cb = new CsvToBeanBuilder<CsvPriceBean>(reader)
+        CsvToBean<CsvPriceBean> csvToBean = new CsvToBeanBuilder<CsvPriceBean>(reader)
                 .withType(CsvPriceBean.class)
                 .withMappingStrategy(mappingStrategy)
                 .build();
-        List<CsvPriceBean> list = cb.parse();
-        reader.close();
 
-        return list;
-    }
-
-    private void persistPrices(List<PriceEntity> prices) {
-        priceRepository.saveAll(prices);
+        return csvToBean.stream();
     }
 
     @Override

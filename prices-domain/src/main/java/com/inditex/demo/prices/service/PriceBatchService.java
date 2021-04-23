@@ -10,4 +10,7 @@ public interface PriceBatchService {
     void deleteFile() throws IOException;
 
     void updatePrices();
+
+    @Deprecated
+    void updatePricesNotEfficient();
 }
