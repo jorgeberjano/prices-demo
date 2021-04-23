@@ -4,19 +4,26 @@ import com.inditex.demo.prices.dto.PriceDto;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 @Api(value = "Prices Demo API")
-@Validated
 public interface PriceController {
 
-    @ApiOperation(value = "Get price of a product", notes = "This operation returns a entity", response = PriceDto.class)
+    @ApiOperation(value = "Upload CSV file with product price information")
+    ResponseEntity<Void> uploadCsvFile(
+            @ApiParam(value = "The CSV File", required = true, example = "prices.csv")
+            MultipartFile file);
+
+    @ApiOperation(value = "Delete CSV file in server")
+    ResponseEntity<Void> deleteCsvFile();
+
+    @ApiOperation(value = "Get price of a product", response = PriceDto.class)
     PriceDto getPrice(
             @ApiParam(value = "Product identifier", required = true, example = "35455")
-            @RequestParam String productId,
+            String productId,
             @ApiParam(value = "Brand identifier", required = true, example = "1")
-            @RequestParam String brandId,
+            String brandId,
             @ApiParam(value = "Date the price is in effect (YYYY-MM-DD-hh.mm.ss)", required = true, example = "2020-06-14-10.00.00")
-            @RequestParam String date);
+            String date);
 }

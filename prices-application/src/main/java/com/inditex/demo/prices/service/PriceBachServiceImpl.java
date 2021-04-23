@@ -91,6 +91,7 @@ public class PriceBachServiceImpl implements PriceBatchService {
         CsvToBean<CsvPriceBean> csvToBean = new CsvToBeanBuilder<CsvPriceBean>(reader)
                 .withType(CsvPriceBean.class)
                 .withMappingStrategy(mappingStrategy)
+                .withIgnoreEmptyLine(true)
                 .build();
 
         return csvToBean.stream();
