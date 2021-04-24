@@ -13,7 +13,11 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -33,11 +37,11 @@ public class PricesApiTest extends BaseTest {
 
     @Test
     public void testProductPrices() throws Exception {
-
+        // Se sube el archivo CSV de la carpeta de recursos de prueba
         byte[] cvsFileData = PricesApiTest.class.getResourceAsStream("/prices.csv").readAllBytes();
         MockMultipartFile file = new MockMultipartFile("file", cvsFileData);
         mvc.perform(MockMvcRequestBuilders.multipart(PRICES_PATH).file(file)).andExpect(status().isOk());
-        priceBatchService.updatePrices();
+        priceBatchService.updatePricesReactive();
 
         // Test 1: petición a las 10:00 del día 14 del producto 35455 para la brand 1 (ZARA)
         checkPrice("35455", "1", "2020-06-14-10.00.00", "35.50", "1");
@@ -78,25 +82,30 @@ public class PricesApiTest extends BaseTest {
 
 
     @Test
-    public void testPersistPerformance() throws Exception {
-
-        byte[] cvsFileData = PricesApiTest.class.getResourceAsStream("/massive_prices.csv").readAllBytes();
-        MockMultipartFile file = new MockMultipartFile("file", cvsFileData);
-        mvc.perform(MockMvcRequestBuilders.multipart(PRICES_PATH).file(file)).andExpect(status().isOk());
+    public void testReactivePerformance() throws Exception {
+        // Se copia el archivo con datos masivos de la carpeta de recursos de prueba a la carpeta de trabajo
+        InputStream src = getClass().getResourceAsStream("/massive_prices.csv");
+        Files.copy(src, Paths.get("prices.csv"), StandardCopyOption.REPLACE_EXISTING);
 
         StopWatch watch = new StopWatch();
         watch.start();
-        priceBatchService.updatePrices();
+        priceBatchService.updatePricesReactive();
         watch.stop();
-        System.out.println("Update prices efficiently in " + watch.getTime() + " ms");
+        System.out.println("Update prices reactively in " + watch.getTime() + " ms");
         System.out.println("Used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 + " Kb");
-        System.out.println();
+    }
 
-        watch.reset();
+    @Test
+    public void testNonReactivePerformance() throws Exception {
+        // Se copia el archivo con datos masivos de la carpeta de recursos de prueba a la carpeta de trabajo
+        InputStream src = getClass().getResourceAsStream("/massive_prices.csv");
+        Files.copy(src, Paths.get("prices.csv"), StandardCopyOption.REPLACE_EXISTING);
+
+        StopWatch watch = new StopWatch();
         watch.start();
-        priceBatchService.updatePricesNotEfficient();
+        priceBatchService.updatePricesNotReactive();
         watch.stop();
-        System.out.println("Update prices inefficiently in " + watch.getTime() + " ms");
+        System.out.println("Update prices non reactively in " + watch.getTime() + " ms");
         System.out.println("Used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 + " Kb");
     }
 }

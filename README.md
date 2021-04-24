@@ -2,9 +2,9 @@
 
 ## Intoducción
 
-Se trata diseñar en implementar un software modular aplicando principios SOLID y una arquitectura limpia (inspirada en la arquitectura hexagonal).
+Se trata de diseñar e implementar un software modular aplicando principios SOLID y una arquitectura limpia (inspirada en la arquitectura hexagonal).
 
-Se ha implementado mediante un microservicio que por una parte expone una interface REST (API) y por otra tiene la funcionalidad de actualizar los datos de la base de datos. Esta actualización se  produce al arrancar el servicio y, a partir de ahí, todos los días, a medianoche mediante una tarea programada.
+Se ha implementado mediante un microservicio que, por una parte, expone una interfaz REST (API) y por otra tiene un proceso de persistencia de los datos almacenados en un archuivo CSV en una base de datos. Esta actualización se  produce al arrancar el servicio y, a partir de ahí, todos los días, a medianoche mediante una tarea programada. En una implementación real la hora de la actualización sería configurable,
 
 La interfaz REST está documentada con `Swagger` y expone tres *endpoints*:
 
@@ -14,7 +14,7 @@ La interfaz REST está documentada con `Swagger` y expone tres *endpoints*:
 
 `DELETE /price` Para borrar el archivo CSV de precios (no borra los precios).
 
-Indicar que los precios de los productos solo se actualizan, nunca se borran.
+Indicar que los precios de los productos se borran antes de ser actualizados. En una implementación real se debería evitar no disponer de precios durante la actualización de los mismos. Se podría implementar fácilmente haciendo que las filas de la tabla tuviesen un flag que indicase si son antiguos o nuevos y se borrasen los precios antiguos al final de la actualización
 
 Los nombres de los campos de base de datos se han mantenido como si de una base de datos heredada se tratase, algunos nombres se han renombrado en la clase que representa la entidad para que sean mas explícitos y mantengan la convención de nombres de atributos de Java.
 
@@ -38,19 +38,35 @@ El microservicio conta de tres módulos, cada uno implementa una de las siguient
 
 Se ha implementado un microservicio servicio `Spring Boot` mediante un proyecto `Maven` multi-módulo.
 
+Para la documentación online de la API se ha usado Swagger. Puede verse la interfaz de usuario de la misma en http://localhost:8080/swagger-ui.html cuando se ejecuta el micro localmente.
+
 Para la persistencia se ha usado una base de datos en memoria `H2` implementando los repositorios con `Spring Data JPA`.
 
 Para el mapeo de objetos (entidades, *beans* y DTO) se ha usado la librería `MapStruct` .
 
 Para la lectura del archivo CSV se ha usado la librería `OpenCSV`.
 
-Se ha intentado optimizar la carga del archivo CSV realizando la lectura del mismo de forma progresiva usando un *stream* para la lectura, conversión en entidades y persistencia.
+Para el procesamiento reactivo del archivo y la persistencia de datos se ha usado `Reactor`.
 
-La alternativa menos eficiente, en teoría, es cargar todos los objetos en una lista y persistirlos de una sola vez. Esto consumiría mucha mas memoria RAM porque tendría que cargar el contenido del archivo CSV en memoria y crear la lista con todas las entidades también en memoria, lo que hace que el consumo de memoria crezca. 
+Se ha intentado optimizar la carga del archivo CSV realizando la lectura del mismo de forma reactiva usando un Flux donde se procesan los datos por paquetes de un tamaño máximo determinado, de tal manera que no haga falta cargar en memoria todos los datos del archivo CSV simultaneamente. De esta maner el micro necesita menos memoria para su ejecución y no hay peligro de que la memoria se consuma completamente ante archivos CSV de varios cientos de Megabytes.
+
+La alternativa, menos eficiente en el uso de memoria, es cargar todos los objetos en una lista y persistirlos de una sola vez. Esto consumiría mucha mas memoria RAM porque tendría que cargar el contenido del archivo CSV en memoria y crear la lista con todas las entidades también en memoria, lo que hace que el consumo de memoria crezca. 
 
 Para las pruebas se ha usado `Spring MVC testing framework` que permite emular las llamadas al controlador como si de llamadas  HTTP se tratara.
 
-Se ha implementado un test para validar los resultados tal como se especifica en los requisitos y se ha realizado una prueba de rendimiento con una archivo CSV de mas de 200.000 líneas para comparar las dos formas de carga y persistencia de los datos CSV. No se ha encontrado mucha diferencia, quizás para que se llegue a notar la mejora en cuanto del uso de la memoria tiene que tener cargas superiores. Por otra parte las forma de persistencia por pedazos no penaliza demasiado en tiempo.
+Se ha implementado un test para validar los resultados tal como se especifica en los requisitos.
+
+Además se ha realizado una prueba de rendimiento con una archivo CSV de mas de 200.000 líneas (casi 20 Mb) para comparar las dos formas de carga y persistencia de los datos CSV: reactiva y no reactiva.
+
+Se han realizado los test limitando la memoria de la maquina virtual de Java usando el parámetro -Xmx obteniendo los siguientes resultados:
+
+| Implementación                                    | Parámetro | Resultado             |
+| ------------------------------------------------- | --------- | --------------------- |
+| Reactiva (persistencia en bloques de 1000 lineas) | -Xmx360M  | Correcto              |
+| No reactiva (persitencia completa)                | -Xmx360M  | Error (Out of memory) |
+| No reactiva (persitencia completa)                | -Xmx400M  | Correcto              |
+
+Se comprueba así que la versión reactiva limitando la persistencia en bloques necesita de menos memoria para su ejecución.
 
 Se ha descartado una implementación usando técnicas de paralelización porque al ser una única base de datos a la que van dirigidas las peticione se considera que no va a mejorar el rendimiento, incluso lo pudiese empeorar por los bloqueos que se puedan producir en la implementación concurrente.
 
