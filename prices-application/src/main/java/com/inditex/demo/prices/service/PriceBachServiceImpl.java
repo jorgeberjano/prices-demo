@@ -8,8 +8,8 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import com.opencsv.bean.MappingStrategy;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,15 +29,14 @@ import java.util.stream.Stream;
 
 @Service
 @Slf4j
+@AllArgsConstructor
 public class PriceBachServiceImpl implements PriceBatchService {
 
     private static final int BATCH_SIZE = 1000;
 
-    @Autowired
-    private PricesMapper pricesMapper;
+    private final PricesMapper pricesMapper;
 
-    @Autowired
-    private PriceRepository priceRepository;
+    private final PriceRepository priceRepository;
 
     @PostConstruct
     public void init() {
@@ -61,12 +60,17 @@ public class PriceBachServiceImpl implements PriceBatchService {
             return;
         }
 
+        // Primero se borran todos los precios. En una implementación real se debería evitar no disponer de precios
+        // durante la carga de los mismos. Se podría implementar fácilmente haciendo que las filas de la tabla tuviesen
+        // un flag que indicase si son antiguos o nuevos y se borrasen los precios antiguos al final de la actualización
+        priceRepository.deleteAll();
+
         // Se persisten las entidades en trozos de esta manera no se carga completamente el archivo CVS en memoria
         // pero, por otra parte, se realiza la grabación de las entidades por lotes, lo cual es mas eficiente que hacerlo
         // de uno en uno
         Flux.fromStream(csvPriceBeans.map(pricesMapper::mapCsvToEntity))
                 .buffer(BATCH_SIZE)
-                .subscribe(priceEntities -> priceRepository.saveAll(priceEntities));
+                .subscribe(priceRepository::saveAll);
     }
 
     @Deprecated
