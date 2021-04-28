@@ -28,13 +28,13 @@ El formato de las fechas se ha usado para la API es el formato ISO de fecha y ho
 
 ## Ejecución
 
-Para ejecutar la aplicación basta con tener instalado java 11 y maven y teclear en un terminal:
+Para ejecutar la aplicación se debe tener instalado java 11 y maven. En un terminal introducir el siguiente comando:
 
 ````
 mvn exec:exec
 ````
 
-O bien configurar la ejecución de la clase `com.inditex.demo.prices.Application` del modulo `prices-api` usando como capeta de trabajo la carpeta workingdir que hay en dicho módulo.
+Tambien es posible configurar la ejecución desde un entorno de desarrollo (IDE). Se debe configurar la clase principal (Main Class) apuntando a `com.inditex.demo.prices.Application` del modulo `prices-api`  y usar como capeta de trabajo la carpeta `/workingdir` que hay en dicho módulo.
 
 Luego se puede acceder a la documentación Swagger de la API desde cualquier navegador usando la dirección:
 
