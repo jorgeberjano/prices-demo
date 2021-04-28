@@ -44,19 +44,19 @@ public class PricesApiTest extends BaseTest {
         priceBatchService.updatePricesReactive();
 
         // Test 1: petición a las 10:00 del día 14 del producto 35455 para la brand 1 (ZARA)
-        checkPrice("35455", "1", "2020-06-14-10.00.00", "35.50", "1");
+        checkPrice("35455", "1", "2020-06-14T10:00:00", "35.50", "1");
 
         // Test 2: petición a las 16:00 del día 14 del producto 35455 para la brand 1 (ZARA)
-        checkPrice("35455", "1", "2020-06-14-16.00.00", "25.45", "2");
+        checkPrice("35455", "1", "2020-06-14T16:00:00", "25.45", "2");
 
         // Test 3: petición a las 21:00 del día 14 del producto 35455 para la brand 1 (ZARA)
-        checkPrice("35455", "1", "2020-06-14-21.00.00", "35.50", "1");
+        checkPrice("35455", "1", "2020-06-14T21:00:00", "35.50", "1");
 
         // Test 4: petición a las 10:00 del día 15 del producto 35455 para la brand 1 (ZARA)
-        checkPrice("35455", "1", "2020-06-15-10.00.00", "30.50", "3");
+        checkPrice("35455", "1", "2020-06-15T10:00:00", "30.50", "3");
 
         // Test 5: petición a las 21:00 del día 16 del producto 35455 para la brand 1 (ZARA)
-        checkPrice("35455", "1", "2020-06-16-21.00.00", "38.95", "4");
+        checkPrice("35455", "1", "2020-06-16T21:00:00", "38.95", "4");
     }
 
     private void checkPrice(String productId, String brandId, String dateText, String expectedPrice, String expectedPriceList) throws Exception {

@@ -10,16 +10,14 @@ import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import com.opencsv.bean.MappingStrategy;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -87,12 +85,17 @@ public class PriceBachServiceImpl implements PriceBatchService {
         priceRepository.saveAll(priceEntities);
     }
 
+    @Override
+    public FileSystemResource getCVSFile() {
+        return new FileSystemResource(csvFilePath.toFile());
+    }
+
     private List<CsvPriceBean> readPricesFromCsv() throws IOException {
         return getCsvPriceBeans().parse();
     }
 
     /**
-     * Obtiene el stream de beans leidos del CVS
+     * Obtiene el stream de beans leídos del CVS
      */
     private Stream<CsvPriceBean> getCsvPricesBeanStream() throws IOException {
         return StreamSupport.stream(getCsvPriceBeans().spliterator(), false);
@@ -123,13 +126,16 @@ public class PriceBachServiceImpl implements PriceBatchService {
                 throw new RuntimeException("Failed to create file " + multipartFile.getName());
             }
         }
-        FileOutputStream out = new FileOutputStream(file);
-        multipartFile.getInputStream().transferTo(out);
-        out.close();
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            multipartFile.getInputStream().transferTo(out);
+        }
     }
 
     @Override
     public void deleteFile() throws IOException {
+        if (!Files.exists(csvFilePath)) {
+            throw new FileNotFoundException("File not found: " + csvFilePath);
+        }
         Files.delete(csvFilePath);
     }
 }

@@ -8,7 +8,7 @@ Se ha implementado mediante un microservicio que, por una parte, expone una inte
 
 La interfaz REST está documentada con `Swagger` y expone tres *endpoints*:
 
-`GET /price` Para consultar el precio de un producto.
+`GET /price/` Para consultar el precio de un producto.
 
 `POST /price` Para subir el archivo CSV de precios (no actualiza los precios inmediatamente).
 
@@ -22,7 +22,23 @@ Para la mayoría de  los campos se ha preferido usar el tipo cadena (`String`)  
 
 Para los precios se ha usado `BigDecimal` por ser un dato que en ningún caso va a perder precisión, como es el caso de los valores representados en coma flotante (`Float` y `Double`). 
 
-El formato de las fechas se ha usado el mismo que tiene el CSV para devolverlo en la API, aunque fácilmente pueda ser sustituido por otro formato mas amigable.
+El formato de las fechas se ha usado para la API es el formato ISO de fecha y hora (por ejemplo 2021-04-24T11:00:00) a diferencia del formato usado en el archivo CSV que es el que especidican los requisitos (por ejemplo 2021-04-24-11.00.00).
+
+
+
+## Ejecución
+
+Para ejecutar la aplicación basta con tener instalado java 11 y maven y teclear en un terminal:
+
+````
+mvn exec:exec
+````
+
+O bien configurar la ejecución de la clase `com.inditex.demo.prices.Application` del modulo `prices-api` usando como capeta de trabajo la carpeta workingdir que hay en dicho módulo.
+
+Luego se puede acceder a la documentación Swagger de la API desde cualquier navegador usando la dirección:
+
+http://localhost:8080/swagger-ui.html
 
 
 
@@ -31,12 +47,16 @@ El formato de las fechas se ha usado el mismo que tiene el CSV para devolverlo e
 El microservicio conta de tres módulos, cada uno implementa una de las siguientes capas:
 
 - Infraestructura: `prices-api`, implementa el punto de entrada de la aplicación, la configuración y el controlador.
-- Aplicación: `prices-application`, implementa la lógica de negocio y casos de uso.
+- Aplicación: `prices-usecase`, implementa la lógica de negocio y casos de uso.
 - Dominio: `prices-domain`, implementa las entidades, *beans*, DTO, repositorios e interfaces de servicio.
 
 ### Frameworks y librerías
 
 Se ha implementado un microservicio servicio `Spring Boot` mediante un proyecto `Maven` multi-módulo.
+
+Se ha usado la version 11 de Java para la compilación y ejecución, usandose varias características que se introdujeron a partir de la versión 8 como las clases LocalDateTime, Optional, Stream...
+
+Para el desarrollo se ha usado el IDE Jetbrains IntelliJ.
 
 Para la documentación online de la API se ha usado `Swagger`. Puede verse la interfaz de usuario de la misma en http://localhost:8080/swagger-ui.html cuando se ejecuta el micro localmente.
 
@@ -68,7 +88,7 @@ Se han realizado los test limitando la memoria de la maquina virtual de Java usa
 
 Se comprueba así que la versión reactiva limitando la persistencia en bloques necesita menos memoria para su ejecución.
 
-Se ha descartado una implementación usando técnicas de paralelización porque, al ser una única base de datos a la que van dirigidas las peticiones, se considera que no va a mejorar el rendimiento, incluso lo pudiese empeorar por los bloqueos que se puedan producir con una implementación concurrente.
+Se ha descartado una implementación usando técnicas de paralelización porque, al ser una única base de datos a la que van dirigidas las peticiones, se considera que no va a mejorar el rendimiento, incluso lo pudiese empeorar por los bloqueos que se producen entre los bloqueos con una implementación concurrente.
 
 
 
