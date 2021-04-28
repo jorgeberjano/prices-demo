@@ -5,22 +5,21 @@ import com.inditex.demo.prices.dto.PriceDto;
 import com.inditex.demo.prices.entity.PriceEntity;
 import org.mapstruct.Mapper;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Mapper(componentModel = "spring")
 public abstract class PricesMapper {
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH.mm.ss");
+    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH.mm.ss");
 
     public abstract PriceEntity mapCsvToEntity(CsvPriceBean priceCsvBean);
 
-    public Date mapStringToDateTime(String dateTimeText) throws ParseException {
-        return dateFormat.parse(dateTimeText);
+    public LocalDateTime mapStringToDateTime(String dateTimeText) {
+        return LocalDateTime.parse(dateTimeText, dateTimeFormatter);
     }
 
-    public String mapDateTimeToString(Date dateTime) throws ParseException {
-        return dateFormat.format(dateTime);
+    public String mapDateTimeToString(LocalDateTime dateTime) {
+        return dateTime.format(dateTimeFormatter);
     }
 
     public abstract PriceDto mapEntityToDto(PriceEntity priceEntity);

@@ -10,7 +10,7 @@
 
     <modules>
         <module>prices-domain</module>
-        <module>prices-application</module>
+        <module>prices-usecase</module>
         <module>prices-api</module>
     </modules>
 

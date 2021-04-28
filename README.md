@@ -38,7 +38,7 @@ El microservicio conta de tres módulos, cada uno implementa una de las siguient
 
 Se ha implementado un microservicio servicio `Spring Boot` mediante un proyecto `Maven` multi-módulo.
 
-Para la documentación online de la API se ha usado Swagger. Puede verse la interfaz de usuario de la misma en http://localhost:8080/swagger-ui.html cuando se ejecuta el micro localmente.
+Para la documentación online de la API se ha usado `Swagger`. Puede verse la interfaz de usuario de la misma en http://localhost:8080/swagger-ui.html cuando se ejecuta el micro localmente.
 
 Para la persistencia se ha usado una base de datos en memoria `H2` implementando los repositorios con `Spring Data JPA`.
 
@@ -66,9 +66,9 @@ Se han realizado los test limitando la memoria de la maquina virtual de Java usa
 | No reactiva (persitencia completa)                | -Xmx360M  | Error (Out of memory) |
 | No reactiva (persitencia completa)                | -Xmx400M  | Correcto              |
 
-Se comprueba así que la versión reactiva limitando la persistencia en bloques necesita de menos memoria para su ejecución.
+Se comprueba así que la versión reactiva limitando la persistencia en bloques necesita menos memoria para su ejecución.
 
-Se ha descartado una implementación usando técnicas de paralelización porque al ser una única base de datos a la que van dirigidas las peticione se considera que no va a mejorar el rendimiento, incluso lo pudiese empeorar por los bloqueos que se puedan producir en la implementación concurrente.
+Se ha descartado una implementación usando técnicas de paralelización porque, al ser una única base de datos a la que van dirigidas las peticiones, se considera que no va a mejorar el rendimiento, incluso lo pudiese empeorar por los bloqueos que se puedan producir con una implementación concurrente.
 
 
 

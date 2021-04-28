@@ -5,7 +5,7 @@ import lombok.Data;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -17,11 +17,11 @@ public class PriceEntity {
     @Column(name = "BRAND_ID")
     private String brandId;
 
-    @Column(name = "START_DATE")
-    private Date startDate;
+    @Column(name = "START_DATE", columnDefinition = "TIMESTAMP")
+    private LocalDateTime startDate;
 
-    @Column(name = "END_DATE")
-    private Date endDate;
+    @Column(name = "END_DATE", columnDefinition = "TIMESTAMP")
+    private LocalDateTime endDate;
 
     @Column(name = "PRICE_LIST")
     private String priceList;

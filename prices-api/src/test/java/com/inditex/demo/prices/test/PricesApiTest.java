@@ -40,7 +40,7 @@ public class PricesApiTest extends BaseTest {
         // Se sube el archivo CSV de la carpeta de recursos de prueba
         byte[] cvsFileData = PricesApiTest.class.getResourceAsStream("/prices.csv").readAllBytes();
         MockMultipartFile file = new MockMultipartFile("file", cvsFileData);
-        mvc.perform(MockMvcRequestBuilders.multipart(PRICES_PATH).file(file)).andExpect(status().isOk());
+        mvc.perform(MockMvcRequestBuilders.multipart("/prices/csv").file(file)).andExpect(status().isOk());
         priceBatchService.updatePricesReactive();
 
         // Test 1: petición a las 10:00 del día 14 del producto 35455 para la brand 1 (ZARA)
@@ -59,12 +59,10 @@ public class PricesApiTest extends BaseTest {
         checkPrice("35455", "1", "2020-06-16-21.00.00", "38.95", "4");
     }
 
-    private void checkPrice(String productId, String brandId, String date, String expectedPrice, String expectedPriceList) throws Exception {
+    private void checkPrice(String productId, String brandId, String dateText, String expectedPrice, String expectedPriceList) throws Exception {
         UriComponents uri = UriComponentsBuilder.newInstance()
-                .path(PRICES_PATH)
-                .queryParam("productId", productId)
-                .queryParam("brandId", brandId)
-                .queryParam("date", date)
+                .pathSegment("brand", brandId, "product", productId, "price")
+                .queryParam("date", dateText)
                 .build();
 
         MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get(uri.toUriString()).accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
@@ -79,7 +77,6 @@ public class PricesApiTest extends BaseTest {
         assertEquals(productId, price.getProductId());
         assertEquals(brandId, price.getBrandId());
     }
-
 
     @Test
     public void testReactivePerformance() throws Exception {
