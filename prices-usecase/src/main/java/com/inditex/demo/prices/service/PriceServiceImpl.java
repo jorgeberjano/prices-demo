@@ -3,10 +3,12 @@ package com.inditex.demo.prices.service;
 import com.inditex.demo.prices.dto.PriceDto;
 import com.inditex.demo.prices.exception.PriceNotFoundException;
 import com.inditex.demo.prices.mapper.PricesMapper;
+import com.inditex.demo.prices.repository.PriceReactiveRepository;
 import com.inditex.demo.prices.repository.PriceRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
 
@@ -17,6 +19,8 @@ public class PriceServiceImpl implements PriceService {
 
     private final PriceRepository priceRepository;
 
+    private final PriceReactiveRepository priceReactiveRepository;
+
     private final PricesMapper pricesMapper;
 
     @Override
@@ -26,6 +30,12 @@ public class PriceServiceImpl implements PriceService {
         return priceRepository.findFirstByProductBrandAndDate(productId, brandId, date)
                 .map(pricesMapper::mapEntityToDto)
                 .orElseThrow(() -> new PriceNotFoundException(getNotFoundMessage(productId, brandId, date)));
+    }
+
+    @Override
+    public Flux<PriceDto> getAllPrices() {
+        return priceReactiveRepository.findAll()
+                .map(pricesMapper::mapEntityToDto);
     }
 
     private String getNotFoundMessage(String productId, String brandId, LocalDateTime date) {

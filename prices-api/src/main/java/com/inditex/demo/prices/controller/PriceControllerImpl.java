@@ -10,11 +10,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/brand/{brandId}/product/{productId}/price")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @AllArgsConstructor
 @Validated
@@ -22,7 +22,7 @@ public class PriceControllerImpl implements PriceController {
 
     private final PriceService priceService;
 
-    @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(value = "/brand/{brandId}/product/{productId}/price", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<PriceDto> getPrice(@PathVariable String productId,
                                              @PathVariable String brandId,
                                              @RequestParam(required = false)
@@ -38,4 +38,10 @@ public class PriceControllerImpl implements PriceController {
             return ResponseEntity.notFound().header("message", ex.getMessage()).build();
         }
     }
+
+    @GetMapping(value = "/prices", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public Flux<PriceDto> getAllPrices() {
+        return priceService.getAllPrices();
+    }
+
 }
